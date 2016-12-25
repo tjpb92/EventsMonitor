@@ -12,7 +12,7 @@ import java.util.logging.Logger;
  * Classe décrivant un controleur
  *
  * @author Thierry Baribaud
- * @version 0.02
+ * @version 0.03
  */
 public class Controleur implements Serializable, Runnable {
 
@@ -42,12 +42,20 @@ public class Controleur implements Serializable, Runnable {
     private ListeDeMesures listeDeMesures = null;
 
     /**
+     * debugMode : fonctionnement du programme en mode debug (true/false).
+     * Valeur par défaut : false.
+     */
+    private static boolean debugMode = false;
+
+    /**
      * Constructeur principal
      *
      * @param mongoDatabase connexion à la base de données
+     * @param debugMode fonctionnement du programme en mode debug
      */
-    public Controleur(MongoDatabase mongoDatabase) {
+    public Controleur(MongoDatabase mongoDatabase, boolean debugMode) {
         this.mongoDatabase = mongoDatabase;
+        Controleur.debugMode = debugMode;
     }
 
     /**
@@ -123,11 +131,13 @@ public class Controleur implements Serializable, Runnable {
     public void run() {
         long i = 0;
 
-        while(true) {
+        while (true) {
             i++;
             setNombreDeMesures(i);
-            setListeDeMesures(new ListeDeMesures(this.mongoDatabase));
-            System.out.println("Mesure no " + getNombreDeMesures()+ ", " + getListeDeMesures());
+            setListeDeMesures(new ListeDeMesures(this.mongoDatabase, debugMode));
+            if (debugMode) {
+                System.out.println("Mesure no " + getNombreDeMesures() + ", " + getListeDeMesures());
+            }
             try {
                 sleep((long) 5000);
             } catch (InterruptedException ex) {

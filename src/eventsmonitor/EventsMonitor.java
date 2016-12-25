@@ -12,7 +12,7 @@ import utils.DBServerException;
  * MongoDb
  *
  * @author Thierry Baribaud
- * @version 0.02
+ * @version 0.03
  */
 public class EventsMonitor {
 
@@ -76,8 +76,8 @@ public class EventsMonitor {
         System.out.println("Connexion à la base de données : " + dbServer.getDbName());
         mongoDatabase = mongoClient.getDatabase(dbServer.getDbName());
 
-        tableauDeSuivi = new TableauDeSuivi();
-        controleur = new Controleur(mongoDatabase);
+        tableauDeSuivi = new TableauDeSuivi(debugMode);
+        controleur = new Controleur(mongoDatabase, debugMode);
         controleur.addPropertyChangeListener(tableauDeSuivi);
         faireDesMesures = new Thread(controleur);
         java.awt.EventQueue.invokeLater(new Runnable() {
