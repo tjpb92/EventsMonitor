@@ -12,7 +12,7 @@ import java.util.logging.Logger;
  * Classe décrivant un controleur
  *
  * @author Thierry Baribaud
- * @version 0.03
+ * @version 0.04
  */
 public class Controleur implements Serializable, Runnable {
 
@@ -41,6 +41,11 @@ public class Controleur implements Serializable, Runnable {
      */
     private ListeDeMesures listeDeMesures = null;
 
+    /**
+     * Tableau des status
+     */
+    private long tableauStatus [][];
+    
     /**
      * debugMode : fonctionnement du programme en mode debug (true/false).
      * Valeur par défaut : false.
@@ -161,6 +166,20 @@ public class Controleur implements Serializable, Runnable {
 
         this.listeDeMesures = listeDeMesures;
         changeSupport.firePropertyChange("listeDeMesures", oldListeDeMesures, listeDeMesures);
+    }
+
+    /**
+     * @return the tableauStatus
+     */
+    public long[][] getTableauStatus() {
+        return tableauStatus;
+    }
+
+    /**
+     * @param tableauStatus the tableauStatus to set
+     */
+    public void setTableauStatus(long[][] tableauStatus) {
+        this.tableauStatus = tableauStatus;
     }
 
 }

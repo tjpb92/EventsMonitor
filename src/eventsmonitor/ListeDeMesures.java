@@ -3,11 +3,13 @@ package eventsmonitor;
 import bkgpi2a.Event;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.BasicDBObject;
+import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.bson.Document;
@@ -19,7 +21,7 @@ import org.joda.time.format.ISODateTimeFormat;
  * Classe décrivant une liste de mesures faites à un instant t.
  *
  * @author Thierry Baribaud
- * @version 0.03
+ * @version 0.04
  */
 public class ListeDeMesures implements Serializable {
 
@@ -39,6 +41,11 @@ public class ListeDeMesures implements Serializable {
     private DateTime dateDernierEvenement;
 
     /**
+     * Tableau des status
+     */
+    private String tableauStatus [][];
+    
+    /**
      * debugMode : fonctionnement du programme en mode debug (true/false).
      * Valeur par défaut : false.
      */
@@ -54,8 +61,11 @@ public class ListeDeMesures implements Serializable {
         ObjectMapper objectMapper;
         MongoCursor<Document> cursor;
         BasicDBObject orderBy;
+        BasicDBObject groupBy;
         Event event;
         DateTimeFormatter format = ISODateTimeFormat.dateTimeParser();
+        int i;
+        int j;
         
         collection = mongoDatabase.getCollection("events");
         setNombreDEvenements(collection.count());
@@ -74,6 +84,37 @@ public class ListeDeMesures implements Serializable {
                 Logger.getLogger(ListeDeMesures.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        
+        tableauStatus = new String[5][2];
+//        tableauStatus = new long[][] {{-3, -2,-1, 0, 1}, {100, 200, 300, 400, 500}};
+//        tableauStatus = new long[][] {{-3, 100},{-2, 200},{-1, 300},{0, 400},{1, 500}};
+
+        // Requête à construire : db.events.aggregate({$group:{"_id":"$status", count: {$sum:1}}},{$sort:{count:-1}})
+//        groupBy = new BasicDBObject("$group", new BasicDBObject("_id","$status").append("count",new BasicDBObject("$sum",1)));
+//        orderBy = new BasicDBObject("$sort", new BasicDBObject("count", -1));
+//        cursor = collection.aggregate(groupBy).iterator();
+        // C'est pas gagné ...
+        AggregateIterable<Document> output = collection.aggregate(Arrays.asList(
+                new Document("$group", new Document("_id", "$status").append("count", new Document("$sum", 1))),
+                new Document("$sort", new Document("count", -1))
+        ));
+
+        i = 0;
+        for (Document doc : output) {
+//            System.out.println(doc.get("_id").getClass() + ", " + doc.get("count").getClass());
+            tableauStatus[i][0] = doc.get("_id").toString();
+            tableauStatus[i][1] = doc.get("count").toString();
+            i++;
+        }
+        for (j=i; j<5; j++) {
+            tableauStatus[j][0] = "";
+            tableauStatus[j][1] = "";
+        }
+
+//        for (i=0;i<5;i++)
+//            for (j=0;j<2;j++) 
+//                System.out.println("i="+i+", j="+j+", tab="+tableauStatus[i][j]);
+//        
     }
 
     /**
@@ -122,6 +163,29 @@ public class ListeDeMesures implements Serializable {
     }
 
     /**
+     * @return le tableau des status
+     */
+    public String[][] getTableauStatus() {
+        return tableauStatus;
+    }
+
+    /**
+     * @param i indice de rangée
+     * @param j indice de colonne
+     * @return le tableau des status
+     */
+    public String getTableauStatus(int i, int j) {
+        return tableauStatus[i][j];
+    }
+
+    /**
+     * @param tableauStatus définit le tableau des status
+     */
+    public void setTableauStatus(String[][] tableauStatus) {
+        this.tableauStatus = tableauStatus;
+    }
+
+    /**
      * Retourne l'objet sous forme textuelle
      *
      * @return retourne l'objet sous forme textuelle
@@ -132,6 +196,7 @@ public class ListeDeMesures implements Serializable {
                 + "nombreDEvenements:" + getNombreDEvenements()
                 + ", dateDeLaMesure:" + getDateDeLaMesure()
                 + ", dateDernierEvenement:" + getDateDernierEvenement()
+                + ", tableauStatus:" + getTableauStatus()
                 + "}";
     }
 
