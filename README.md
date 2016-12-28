@@ -18,6 +18,7 @@ où :
 
 ##Références:
 
+### Jackson
 http://websystique.com/java/json/jackson-convert-java-object-to-from-json/
 http://www.baeldung.com/jackson-annotations
 http://tutorials.jenkov.com/java-json/jackson-annotations.html
@@ -26,16 +27,19 @@ https://avaldes.com/json-tutorial-jackson-annotations-part-2/
 https://www.mkyong.com/java/jackson-tree-model-example/
 https://www.tutorialspoint.com/jackson/jackson_tree_model.htm
 
+### Interface REST
 https://www.javacodegeeks.com/2012/09/simple-rest-client-in-java.html
 https://jersey.java.net/documentation/latest/client.html
-
 https://www.mkyong.com/java/how-to-send-http-request-getpost-in-java/
 http://alvinalexander.com/blog/post/java/simple-https-example
 https://www.mkyong.com/java/java-https-client-httpsurlconnection-example/
-
 http://java2s.com/Tutorials/Java/URL_Connection_Address/Get_and_set_cookie_through_URLConnection_in_Java.htm
 
+### MongoDB
 https://buzut.fr/commandes-de-base-de-mongodb/
 http://harry-wanki.developpez.com/tutoriels/mongodb/debuter-mongodb-introduction-base-donnees-nosql/
+
+### Java
+http://javadevnotes.com
 
 

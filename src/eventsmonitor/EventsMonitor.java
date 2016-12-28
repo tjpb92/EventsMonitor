@@ -12,9 +12,19 @@ import utils.DBServerException;
  * MongoDb
  *
  * @author Thierry Baribaud
- * @version 0.03
+ * @version 0.05
  */
 public class EventsMonitor {
+    
+    /**
+     * Nombre maximum de status à afficher
+     */
+    public final static int MAX_STATUS = 5;
+
+    /**
+     * Nombre maximum d'événements à afficher
+     */
+    public final static int MAX_EVENTS = 30;
 
     /**
      * dbServerType : prod pour le serveur de production, pre-prod pour le

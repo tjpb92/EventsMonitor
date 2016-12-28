@@ -7,8 +7,11 @@ import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import static eventsmonitor.EventsMonitor.MAX_EVENTS;
+import static eventsmonitor.EventsMonitor.MAX_STATUS;
 import java.io.IOException;
 import java.io.Serializable;
+import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,10 +24,15 @@ import org.joda.time.format.ISODateTimeFormat;
  * Classe décrivant une liste de mesures faites à un instant t.
  *
  * @author Thierry Baribaud
- * @version 0.04
+ * @version 0.05
  */
 public class ListeDeMesures implements Serializable {
 
+    /**
+     * Pour formater les nombres
+     */
+    private static final DecimalFormat decimalFormat = new DecimalFormat("#,##0");
+    
     /**
      * Nombre d'événements en base à l'instant t
      */
@@ -43,8 +51,13 @@ public class ListeDeMesures implements Serializable {
     /**
      * Tableau des status
      */
-    private String tableauStatus [][];
-    
+    private String tableauStatus[][];
+
+    /**
+     * Tableau des événements
+     */
+    private String tableauEvenements[][];
+
     /**
      * debugMode : fonctionnement du programme en mode debug (true/false).
      * Valeur par défaut : false.
@@ -66,14 +79,16 @@ public class ListeDeMesures implements Serializable {
         DateTimeFormatter format = ISODateTimeFormat.dateTimeParser();
         int i;
         int j;
-        
+        boolean boucle;
+        Document doc;
+
         collection = mongoDatabase.getCollection("events");
         setNombreDEvenements(collection.count());
         setDateDeLaMesure(new DateTime());
-        
+
         this.debugMode = debugMode;
         objectMapper = new ObjectMapper();
-        
+
         orderBy = new BasicDBObject("sentDate", -1);
         cursor = collection.find().sort(orderBy).iterator();
         if (cursor.hasNext()) {
@@ -84,37 +99,57 @@ public class ListeDeMesures implements Serializable {
                 Logger.getLogger(ListeDeMesures.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        
-        tableauStatus = new String[5][2];
-//        tableauStatus = new long[][] {{-3, -2,-1, 0, 1}, {100, 200, 300, 400, 500}};
-//        tableauStatus = new long[][] {{-3, 100},{-2, 200},{-1, 300},{0, 400},{1, 500}};
 
         // Requête à construire : db.events.aggregate({$group:{"_id":"$status", count: {$sum:1}}},{$sort:{count:-1}})
-//        groupBy = new BasicDBObject("$group", new BasicDBObject("_id","$status").append("count",new BasicDBObject("$sum",1)));
-//        orderBy = new BasicDBObject("$sort", new BasicDBObject("count", -1));
-//        cursor = collection.aggregate(groupBy).iterator();
-        // C'est pas gagné ...
-        AggregateIterable<Document> output = collection.aggregate(Arrays.asList(
+        AggregateIterable<Document> outputStatus = collection.aggregate(Arrays.asList(
                 new Document("$group", new Document("_id", "$status").append("count", new Document("$sum", 1))),
                 new Document("$sort", new Document("count", -1))
         ));
 
+        tableauStatus = new String[MAX_STATUS][2];
         i = 0;
-        for (Document doc : output) {
+        boucle = true;
+        cursor = outputStatus.iterator();
+        while (cursor.hasNext() && boucle) {
+            doc = cursor.next();
 //            System.out.println(doc.get("_id").getClass() + ", " + doc.get("count").getClass());
             tableauStatus[i][0] = doc.get("_id").toString();
-            tableauStatus[i][1] = doc.get("count").toString();
+//            tableauStatus[i][1] = doc.get("count").toString();
+            tableauStatus[i][1] = decimalFormat.format(doc.get("count"));
             i++;
+            boucle = (i < MAX_STATUS);
         }
-        for (j=i; j<5; j++) {
+        for (j = i; j < MAX_STATUS; j++) {
             tableauStatus[j][0] = "";
             tableauStatus[j][1] = "";
         }
+        if (this.debugMode) System.out.println(Arrays.deepToString(tableauStatus));
 
-//        for (i=0;i<5;i++)
-//            for (j=0;j<2;j++) 
-//                System.out.println("i="+i+", j="+j+", tab="+tableauStatus[i][j]);
-//        
+        // Requête à construire : db.events.aggregate({$group:{"_id":"$eventType", count: {$sum:1}}},{$sort:{count:-1}})
+        AggregateIterable<Document> outputEvenements = collection.aggregate(Arrays.asList(
+                new Document("$group", new Document("_id", "$eventType").append("count", new Document("$sum", 1))),
+                new Document("$sort", new Document("count", -1))
+        ));
+
+        tableauEvenements = new String[MAX_EVENTS][2];
+        i = 0;
+        boucle = true;
+        cursor = outputEvenements.iterator();
+        while (cursor.hasNext() && boucle) {
+            doc = cursor.next();
+//            System.out.println(doc.get("_id").getClass() + ", " + doc.get("count").getClass());
+            tableauEvenements[i][0] = doc.get("_id").toString();
+//            tableauEvenements[i][1] = doc.get("count").toString();
+            tableauEvenements[i][1] = decimalFormat.format(doc.get("count"));
+            i++;
+            boucle = (i < MAX_EVENTS);
+        }
+        for (j = i; j < MAX_EVENTS; j++) {
+            tableauEvenements[j][0] = "";
+            tableauEvenements[j][1] = "";
+        }
+        if (this.debugMode) System.out.println(Arrays.deepToString(tableauEvenements));
+
     }
 
     /**
@@ -172,7 +207,7 @@ public class ListeDeMesures implements Serializable {
     /**
      * @param i indice de rangée
      * @param j indice de colonne
-     * @return le tableau des status
+     * @return un élement du tableau des status
      */
     public String getTableauStatus(int i, int j) {
         return tableauStatus[i][j];
@@ -186,6 +221,29 @@ public class ListeDeMesures implements Serializable {
     }
 
     /**
+     * @return le tableau des événements
+     */
+    public String[][] getTableauEvenements() {
+        return tableauEvenements;
+    }
+
+    /**
+     * @param tableauEvenements définit le tableau des événements
+     */
+    public void setTableauEvenements(String[][] tableauEvenements) {
+        this.tableauEvenements = tableauEvenements;
+    }
+
+    /**
+     * @param i indice de rangée
+     * @param j indice de colonne
+     * @return un élément du tableau des événéments
+     */
+    public String getTableauEvenements(int i, int j) {
+        return tableauEvenements[i][j];
+    }
+
+    /**
      * Retourne l'objet sous forme textuelle
      *
      * @return retourne l'objet sous forme textuelle
@@ -196,7 +254,8 @@ public class ListeDeMesures implements Serializable {
                 + "nombreDEvenements:" + getNombreDEvenements()
                 + ", dateDeLaMesure:" + getDateDeLaMesure()
                 + ", dateDernierEvenement:" + getDateDernierEvenement()
-                + ", tableauStatus:" + getTableauStatus()
+                + ", tableauStatus:" + Arrays.toString(getTableauStatus())
+                + ", tableauEvenements:" + Arrays.toString(getTableauEvenements())
                 + "}";
     }
 
