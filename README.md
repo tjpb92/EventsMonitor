@@ -2,7 +2,7 @@
 
 Programme Java permettant de surveiller l'activité d'une base de données MongoDb
 
-##Utilisation:
+## Utilisation:
 ```
 java EventsMonitor [-dbserver db] [-d] [-t] 
 ```
@@ -11,12 +11,12 @@ où :
 * ```-d``` le programme s'exécute en mode débug, il est beaucoup plus verbeux. Désactivé par défaut (paramètre optionnel).
 * ```-t``` le programme s'exécute en mode test, les transcations en base de données ne sont pas faites. Désactivé par défaut (paramètre optionnel).
 
-##Pré-requis :
+## Pré-requis :
 - Java 6 ou supérieur.
 - Driver Mongodb pour Java
 - Jackson
 
-##Références:
+## Références:
 
 ### Jackson
 http://websystique.com/java/json/jackson-convert-java-object-to-from-json/
